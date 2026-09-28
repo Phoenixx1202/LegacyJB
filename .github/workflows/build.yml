@@ -1,0 +1,66 @@
+name: Build LegacyJB
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      firmware:
+        description: PS5 firmware macro value, for example 0x320
+        required: false
+        default: "0x320"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build payload
+    runs-on: ubuntu-latest
+
+    env:
+      PS5_PAYLOAD_SDK: /opt/ps5-payload-sdk
+      SDK_URL: ${{ vars.PS5_PAYLOAD_SDK_URL || 'https://github.com/ps5-payload-dev/sdk/releases/download/v0.43/ps5-payload-sdk.zip' }}
+      FW_VERSION: ${{ github.event.inputs.firmware || vars.PS5_FW_VERSION || '0x320' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install host packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            ninja-build \
+            unzip \
+            wget
+
+      - name: Install PS5 Payload SDK
+        run: |
+          wget -q -O /tmp/ps5-payload-sdk.zip "$SDK_URL"
+          sudo rm -rf "$PS5_PAYLOAD_SDK"
+          sudo unzip -q /tmp/ps5-payload-sdk.zip -d /opt
+          test -f "$PS5_PAYLOAD_SDK/toolchain/prospero.cmake"
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_TOOLCHAIN_FILE="$PS5_PAYLOAD_SDK/toolchain/prospero.cmake" \
+            -DV_FW="$FW_VERSION"
+
+      - name: Build
+        run: cmake --build build --target legacyjb -j"$(nproc)"
+
+      - name: Upload payload
+        uses: actions/upload-artifact@v7
+        with:
+          name: LegacyJB
+          path: |
+            bin/LegacyJB.elf
+            bin/LegacyJB.bin
+          if-no-files-found: error
