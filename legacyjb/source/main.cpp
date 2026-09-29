@@ -45,7 +45,7 @@ static constexpr const char *LEGACY_PREV_LOG_PATH =
     "/user/data/legacy_jb.prev.log";
 static constexpr off_t LEGACY_LOG_MAX_BYTES = 256 * 1024;
 static constexpr const char *LEGACY_BUILD_TAG =
-    "LegacyJB hb-itemzflow-compat 2026-09-28.1";
+    "LegacyJB hb-itemzflow-compat fw-13.60 2026-09-29.1";
 static constexpr const char *HOMEBREW_STORE_TITLE_ID = "NPXS39041";
 static constexpr const char *ITEMZFLOW_TITLE_ID = "ITEM00001";
 static constexpr const char *HB_STORE_TEST_PATH =
@@ -1876,7 +1876,9 @@ int main(int argc, char **argv) {
   int net_ret = sceNetInit();
   int netctl_ret = sceNetCtlInit();
   int usersvc_ret = sceUserServiceInitialize(NULL);
+  unsigned int firmware = kernel_get_fw_version() >> 16;
   etaHEN_log("Build: %s", LEGACY_BUILD_TAG);
+  etaHEN_log("Firmware code: 0x%04X", firmware);
   etaHEN_log("Kernel base: 0x%llX", (unsigned long long)kernel_base);
   etaHEN_log("Runtime kernel data base: 0x%llX",
              (unsigned long long)KERNEL_ADDRESS_DATA_BASE);
@@ -1889,6 +1891,13 @@ int main(int argc, char **argv) {
 
   if (kernel_base == 0) {
     notify(true, "Legacy Jailbreak Server failed\nMissing kernel base");
+    return 1;
+  }
+
+  if (KERNEL_ADDRESS_ALLPROC == 0 || KERNEL_ADDRESS_ROOTVNODE == 0) {
+    etaHEN_log("Required kernel offsets are unavailable for firmware 0x%04X",
+               firmware);
+    notify(true, "Unsupported firmware: 0x%04X", firmware);
     return 1;
   }
 

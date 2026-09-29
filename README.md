@@ -87,14 +87,16 @@ wsl -e bash -lc "cd '/mnt/c/Projects/LegacyJB' && cmake --build build --target l
 
 ## Target firmware
 
-`V_FW` defines the `PS5_FW_VERSION` macro during compilation. The default value is `0x320`.
+`V_FW` defines the `PS5_FW_VERSION` compatibility macro during compilation. The default value is `0x1360`.
+
+Kernel addresses are resolved at runtime by PS5 Payload SDK `v0.43`. SELF decryption includes pager-table mappings through firmware `13.60`, so one build can run across the firmware versions recognized by the SDK.
 
 Examples:
 
 ```bash
 -DV_FW=0x320
--DV_FW=0x403
 -DV_FW=0x900
+-DV_FW=0x1360
 ```
 
 Use a value supported by the SDK and by the offsets available for your environment.

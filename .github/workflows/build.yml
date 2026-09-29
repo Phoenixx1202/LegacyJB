@@ -9,9 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       firmware:
-        description: PS5 firmware macro value, for example 0x320
+        description: PS5 firmware macro value, for example 0x1360
         required: false
-        default: "0x320"
+        default: "0x1360"
 
 permissions:
   contents: read
@@ -24,7 +24,7 @@ jobs:
     env:
       PS5_PAYLOAD_SDK: /opt/ps5-payload-sdk
       SDK_URL: ${{ vars.PS5_PAYLOAD_SDK_URL || 'https://github.com/ps5-payload-dev/sdk/releases/download/v0.43/ps5-payload-sdk.zip' }}
-      FW_VERSION: ${{ github.event.inputs.firmware || vars.PS5_FW_VERSION || '0x320' }}
+      FW_VERSION: ${{ github.event.inputs.firmware || vars.PS5_FW_VERSION || '0x1360' }}
 
     steps:
       - name: Checkout
